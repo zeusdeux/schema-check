@@ -100,7 +100,6 @@ LoaderComponent = React.createClass({
     svg += '  </g>';
     svg += '</svg>';
 
-    console.log(svg);
     return (
       <div className="loader" dangerouslySetInnerHTML={{__html: svg}} />
     );
