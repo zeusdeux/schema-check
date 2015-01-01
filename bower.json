@@ -1,0 +1,29 @@
+{
+  "name": "schema-check",
+  "main": "index.js",
+  "version": "0.0.1",
+  "authors": [
+    "Mudit Ameta <zeusdeux@gmail.com>"
+  ],
+  "description": "Checks for schema.org schemas on a page and all the links on that page",
+  "keywords": [
+    "schema.org",
+    "schema",
+    "synup",
+    "seo",
+    "seochecklist"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "skeleton": "~2.0.4",
+    "svg-loaders": "~1.0.2"
+  }
+}

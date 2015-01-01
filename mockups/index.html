@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Schema checker</title>
+
+  <!-- Metas for the crawlers to munch on -->
+  <meta name="description" content="Checks if the pages on a site have schemas defined at schema.org">
+  <meta name="author" content="Mudit Ameta">
+
+  <!-- Mobile specific metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Font -->
+  <link href='//fonts.googleapis.com/css?family=Raleway:400,300,600' rel='stylesheet' type='text/css'>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../public/css/normalize.css">
+  <link rel="stylesheet" href="../public/css/skeleton.css">
+  <link rel="stylesheet" href="../public/css/custom.css">
+
+  <!-- jQuery -->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+  <script>
+    $(function() {
+      $('#search').on('click', function() {
+        $('.search-container').toggleClass('twelve').toggleClass('four').toggleClass('shrunk');
+        $('.results-container').toggleClass('hidden').toggleClass('eight');
+      })
+    })
+
+  </script>
+</head>
+
+<body>
+  <div class="container main-container">
+    <div class="row">
+      <div class="twelve columns search-container">
+        <div class="search-box-container">
+          <h3>Check your schema moron</h3>
+          <input class="u-full-width" name="" type="text" value="" placeholder="Enter url" id="search-box" />
+          <button class="button-primary" id="search">Search</button>
+        </div>
+      </div>
+      <div class="hidden columns results-container">
+        <div class="loader">
+          <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" stroke="#fff">
+            <g fill="none" fill-rule="evenodd" stroke-width="2">
+              <circle cx="22" cy="22" r="19.9971">
+                <animate attributeName="r" begin="0s" dur="1.8s" values="1; 20" calcMode="spline" keyTimes="0; 1" keySplines="0.165, 0.84, 0.44, 1" repeatCount="indefinite" />
+                <animate attributeName="stroke-opacity" begin="0s" dur="1.8s" values="1; 0" calcMode="spline" keyTimes="0; 1" keySplines="0.3, 0.61, 0.355, 1" repeatCount="indefinite" />
+              </circle>
+              <circle cx="22" cy="22" r="18.0909">
+                <animate attributeName="r" begin="-0.9s" dur="1.8s" values="1; 20" calcMode="spline" keyTimes="0; 1" keySplines="0.165, 0.84, 0.44, 1" repeatCount="indefinite" />
+                <animate attributeName="stroke-opacity" begin="-0.9s" dur="1.8s" values="1; 0" calcMode="spline" keyTimes="0; 1" keySplines="0.3, 0.61, 0.355, 1" repeatCount="indefinite" />
+              </circle>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

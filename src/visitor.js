@@ -74,9 +74,9 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
     if (res.statusCode !== 200) {
       self.emit('error', {
         error: new Error(http.STATUS_CODES[res.statusCode]),
-        code: res.statusCode,
-        type: 'RequestError',
-        input: inputUrl
+        type: 'HttpError',
+        input: inputUrl,
+        code: res.statusCode
       });
       return;
     }
