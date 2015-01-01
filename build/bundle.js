@@ -29587,7 +29587,6 @@ LoaderComponent = React.createClass({displayName: "LoaderComponent",
     svg += '  </g>';
     svg += '</svg>';
 
-    console.log(svg);
     return (
       React.createElement("div", {className: "loader", dangerouslySetInnerHTML: {__html: svg}})
     );
