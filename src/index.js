@@ -8,7 +8,6 @@ var bodyParser = require('body-parser');
 var routes = require('./routes');
 var app = express();
 
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -33,9 +32,7 @@ if (app.get('env') === 'development') {
     res.render('error', {
       message: err.message,
       error: err
-
     });
-
   });
 
 }
@@ -47,9 +44,7 @@ app.use(function(err, req, res, next) {
   res.render('error', {
     message: err.message,
     error: {}
-
   });
-
 });
 
 

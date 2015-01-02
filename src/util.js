@@ -1,3 +1,0 @@
-exports.getSocket = function(){
-  return {};
-};

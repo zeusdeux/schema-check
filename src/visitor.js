@@ -1,13 +1,21 @@
-var EE      = require('events').EventEmitter;
-var url     = require('url');
+var url = require('url');
+var util = require('util');
+var http = require('http');
 var request = require('request');
 var cheerio = require('cheerio');
-var util    = require('util');
-var http    = require('http');
+var EE = require('events').EventEmitter;
+
 
 util.inherits(Visitor, EE);
 
-function Visitor() {}
+function Visitor() {
+  var self = this;
+
+  this.on('stop', function _stopSearchHandler() {
+    console.log('Stopping any more network requests');
+    self._stopped = true;
+  });
+}
 
 Visitor.prototype.visitRecursively = function(inputUrl, state) {
   var self = this;
@@ -15,7 +23,7 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
 
   // emit error if inputUrl is falsy and return
   if (!inputUrl) {
-    this.emit('error', {
+    this.emit('errored', {
       error: new Error('Empty input url'),
       type: 'InputError',
       input: inputUrl
@@ -30,7 +38,7 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
 
   // if there's no host then emit error and return
   if (!temp.host || !temp.protocol) {
-    this.emit('error', {
+    this.emit('errored', {
       error: new Error('Malformed input url. It has no host or protocol'),
       type: 'InputError',
       input: inputUrl
@@ -52,6 +60,9 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
     return;
   }
 
+  // if search has been stopped then just return blindly and dont hit the network
+  if (this._stopped) return;
+
   // mark inputUrl as visited
   state[inputUrl] = true;
 
@@ -62,9 +73,11 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
 
     // if error, emit error and return
     if (err) {
-      self.emit('error', {
+      self.emit('errored', {
         error: err,
+        message: err.message,
         type: 'RequestError',
+        code: 500,
         input: inputUrl
       });
       return;
@@ -72,8 +85,11 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
 
     // if status is anything other than a 200, emit httpError and return
     if (res.statusCode !== 200) {
-      self.emit('error', {
-        error: new Error(http.STATUS_CODES[res.statusCode]),
+      err = new Error(http.STATUS_CODES[res.statusCode]);
+      console.log(err);
+      self.emit('errored', {
+        error: err,
+        message: err.message,
         type: 'HttpError',
         input: inputUrl,
         code: res.statusCode
@@ -96,22 +112,35 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
       });
     }
     else {
-      data = [];
+      /*
+        structure
+        {
+          <itemtype>: {.. <itemprop>: <value> ..}
+        }
+      */
+      data = {};
 
       // go over each found schema
       $schema.each(function(i, v) {
         var obj = {};
+        var $itemprops = $(v).find('[itemprop]');
+        var itemtype = $(v).attr('itemtype') || 'unknownItemtype' + i;
+
+        data[itemtype] = data[itemtype] || {};
 
         // go over each child of current schema
-        $(v).children().each(function(j, w) {
+        $itemprops.each(function(j, w) {
           // its of the form { <itemprop>: <value> }
           // example { name: "JW Heating & Air", streetAddress: "1135 Venice Blvd." }
-          obj[$(w).attr('itemprop') || j] = $(w).text();
+          obj[$(w).attr('itemprop') || 'itemprop' + j] = $(w).text();
         });
         // build data that will be emitted after all of this
-        data.push(obj);
+        data[itemtype] = obj;
       });
 
+      // emit data
+      // if there were no itemprops for an itemtype then data[itemtype]
+      // will be [] i.e., empty array
       self.emit('data', {
         data: data,
         url: inputUrl

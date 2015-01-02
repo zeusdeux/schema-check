@@ -1,6 +1,7 @@
-var React = require('react/addons');
 var $     = require('jquery');
+var React = require('react/addons');
 var uuid  = require('node-uuid').v4;
+var io    = require('socket.io-client');
 var MainComponent;
 var SearchComponent;
 var LoaderComponent;
@@ -8,43 +9,174 @@ var ResultsComponent;
 
 
 MainComponent = React.createClass({
-  getInitialState: function() {
-    return {
-      results: [],
-      searchActive: false
-    };
-  },
-  _onSearchClick: function(url){
+  _onSearchClick: function(url) {
+    var self = this;
+
+    //make ajax request with this.props.token, url
+    $.ajax({
+      type: 'POST',
+      url: '/search',
+      data: {
+        url: url,
+        token: this.state.token
+      }
+    }).fail(function(){
+      // hide side pane
+      self.setState({
+        results: [],
+        searchActive: false
+      });
+      alert('Search request failed. Please try again.');
+    });
+
+    // show side pane
     this.setState({
       results: [],
-      searchActive: !this.state.searchActive
+      searchActive: true //!this.state.searchActive
     });
-    //make ajax request with this.props.token, url
   },
-  render: function(){
+  _onCloseResultsPane: function() {
+    var self = this;
+
+    $.ajax({
+      type: 'POST',
+      url: '/stopSearch',
+      data: {
+        token: self.state.token
+      }
+    });
+
+    this.setState({
+      results: {},
+      searchActive: false,
+      socket: this.state.socket,
+      token: this.state.token
+    });
+  },
+  getInitialState: function() {
+    return {
+      results: {},
+      searchActive: false,
+      socket: void 0,
+      token: uuid()
+    };
+  },
+  componentDidMount: function() {
+    var socket = io.connect();
+    var self = this;
+
+    socket.once('connect', function() {
+      console.log('schema-check: connected');
+      console.log('schema-check: subscribing with token', self.state.token);
+      socket.emit('subscribe', self.state.token);
+      socket.on('reconnect', function() {
+        console.log('schema-check: resubscribing with token', self.state.token);
+        socket.emit('subscribe', self.state.token);
+        console.log('schema-check: reconnected');
+      });
+
+      socket.on('errored', function(e) {
+        var results = self.state.results;
+
+        if ('HttpError' === e.type || 'RequestError' === e.type){
+          console.log('schema-check: error received', e);
+
+          results[e.input] = results[e.input] || {};
+          results[e.input].error = true;
+          results[e.input].code = e.code;
+          results[e.input].message = e.message;
+
+          self.setState({
+            results: results
+          });
+        }
+      });
+
+      socket.on('notFound', function(d) {
+        var results = self.state.results;
+
+        console.log('schema-check: notFound received', d);
+        results[d.url] = results[d.url] || {};
+        results[d.url].notFound = true;
+        results[d.url].message = d.message;
+
+        self.setState({
+          results: results
+        });
+      });
+
+      socket.on('data', function(d) {
+        var results = self.state.results;
+
+        console.log('schema-check: data received', d);
+        results[d.url] = results[d.url] || {};
+        results[d.url].data = d.data;
+        self.setState({
+          results: results
+        });
+      });
+
+      socket.on('state', function(s) {
+        // if you want to do something with state, do it here
+      });
+
+    });
+
+    this.setState({
+      socket: socket
+    });
+  },
+  componentWillUnmount: function() {
+    console.log('schema-check: app unmounting');
+    console.log('schema-check: unsubscribing from backend');
+    this.state.socket.emit('unsubscribe', this.state.token);
+    console.log('schema-check: app unmounted');
+  },
+  render: function() {
     return (
       <div className="container main-container">
         <div className="row">
           <SearchComponent searchActive = {this.state.searchActive} onSearchClick = {this._onSearchClick} />
-          <ResultsComponent searchActive = {this.state.searchActive} />
+          <ResultsComponent searchActive = {this.state.searchActive} results = {this.state.results} onCloseResultsPane = {this._onCloseResultsPane} />
         </div>
       </div>
     );
   }
-
 });
 
 SearchComponent = React.createClass({
   mixins: [React.addons.LinkedStateMixin],
-  _onSearchClick: function(){
-    this.props.onSearchClick(this.state.url);
+  validators: {
+    required: function(val, fieldName){
+      if (typeof val === 'undefined' || val === ''){
+        throw new Error('Required field is absent: '+fieldName);
+      }
+    }
+  },
+  _onSearchClick: function() {
+    var inputUrl = this.state.url || this.refs['search-box'].getDOMNode().value;
+
+    try {
+      this.validators.required(inputUrl, 'Search URL');
+      this.props.onSearchClick(inputUrl);
+    }
+    catch(e){
+      alert(e.message);
+    }
+  },
+  _onEnter: function(e){
+    console.log(e);
+    if (13 === e.keycode) this._onSearchClick();
+  },
+  componentDidMount: function() {
+    this.refs['search-box'].getDOMNode().focus();
   },
   getInitialState: function() {
     return {
       url: ''
     };
   },
-  render: function(){
+  render: function() {
     var cx = React.addons.classSet;
     var classes = cx({
       'columns search-container': true,
@@ -56,7 +188,7 @@ SearchComponent = React.createClass({
       <div className={classes}>
         <div className="search-box-container">
           <h3>Check your schema moron</h3>
-          <input className="u-full-width" name="" type="text" placeholder="Enter url" id="search-box" valueLink={this.linkState('url')}/>
+          <input className="u-full-width" type="text" placeholder="Enter url" id="search-box" valueLink={this.linkState('url')} onKeyPress = {this._onEnter} ref="search-box"/>
           <button className="button-primary" id="search" onClick={this._onSearchClick}>Search</button>
         </div>
       </div>
@@ -66,25 +198,100 @@ SearchComponent = React.createClass({
 });
 
 ResultsComponent = React.createClass({
+  _toggleDetails: function(ref) {
+    $(this.refs[ref].getDOMNode()).children('div').toggleClass('hidden').toggleClass('bounceInRight').toggleClass('bounceOutRight');
+  },
+  _onCloseResultsPane: function(){
+    this.props.onCloseResultsPane();
+  },
   render: function() {
     var cx = React.addons.classSet;
     var classes = cx({
       'columns results-container': true,
       'hidden': !this.props.searchActive,
-      'eight': this.props.searchActive
+      'twelve': this.props.searchActive,
+      'expand': this.props.searchActive
+    });
+    var results = [];
+    var self = this;
+
+    Object.keys(this.props.results).forEach(function(url, i){
+      var obj = self.props.results[url];
+      var dataNodes;
+      var pClasses = cx({
+        'red-bg': obj.error,
+        'yellow-bg': obj.notFound,
+        'green-bg': obj.data && Object.keys(obj.data).length
+      });
+      var detailsClasses = cx({
+        'animated hidden bounceOutRight': true
+      });
+      var liClasses = cx({
+        'animated zoomIn': true
+      });
+
+      // i is used as a serial number
+      // incrementing as its zero indexed and serials are not
+      i = i + 1;
+      // if error
+      if (obj.error){
+        results.push (
+          <li className={liClasses} key={url}>
+            <p className={pClasses}>{i}. {url} <span className="right">Error {obj.code}: {obj.message}</span></p>
+          </li>
+        );
+      }
+      // if schema not found
+      else if (obj.notFound){
+        results.push (
+          <li className={liClasses} key={url}>
+            <p className={pClasses}>{i}. {url} <span className="right">{obj.message}</span></p>
+          </li>
+        );
+      }
+      // if there's data
+      else {
+        dataNodes = Object.keys(obj.data).map(function(itemtype){
+          var dataObj = obj.data[itemtype];
+          var itempropNodes = [];
+
+          itempropNodes = Object.keys(dataObj).map(function(itemprop){
+            return (<li key={itemprop}>{itemprop} : {dataObj[itemprop]}</li>);
+          });
+          return (
+            <div key={itemtype} className={detailsClasses}>
+              <p className="heading">Type</p>
+              <p className="type">{itemtype}</p>
+              <p className="heading">Data</p>
+              <ul>
+                {itempropNodes}
+              </ul>
+            </div>
+          );
+        });
+        results.push(
+          <li className={liClasses} key={url} ref={url}>
+            <p className={pClasses} onClick={self._toggleDetails.bind(self, url)}>{i}. {url}</p>
+            {dataNodes}
+          </li>
+        );
+      }
     });
 
     return (
-      <div className={classes}>
-        <LoaderComponent />
+      <div className = {classes}>
+        <span className="cross" onClick={self._onCloseResultsPane}>x</span>
+        <ul className = "results-list">
+          {results}
+        </ul>
+        <LoaderComponent results = {this.props.results} />
       </div>
     );
   }
-
 });
 
 LoaderComponent = React.createClass({
-  render: function(){
+  getInitialState: function() {
     var svg = '';
 
     svg += '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" stroke="#fff">';
@@ -100,8 +307,22 @@ LoaderComponent = React.createClass({
     svg += '  </g>';
     svg += '</svg>';
 
+    return {
+      svg: svg
+    };
+  },
+  render: function() {
+    var classes;
+    var svg = '';
+    var cx = React.addons.classSet;
+
+    classes = cx({
+      'loader': true,
+      'hidden': Object.keys(this.props.results).length
+    });
+
     return (
-      <div className="loader" dangerouslySetInnerHTML={{__html: svg}} />
+      <div className={classes} dangerouslySetInnerHTML={{__html: this.state.svg}} />
     );
   }
 });
