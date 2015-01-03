@@ -22,7 +22,12 @@
 </head>
 
 <body>
-  <script src="js/bundle.js"></script>
+  <p><%= env %></p>
+  <% if ('production' !== env) { %>
+    <script src="js/bundle.js"></script>
+  <% } else { %>
+    <script src="js/bundle.min.js"></script>
+  <% } %>
 </body>
 
 </html>
