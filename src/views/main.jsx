@@ -79,16 +79,21 @@ MainComponent = React.createClass({
     var socket = io.connect();
     var self = this;
 
-    socket.once('connect', function _onConnect() {
-      console.log('schema-check: connected');
+    // setup window unload handler
+    $(window).unload(function(){
+      self._onCloseResultsPane();
+    });
 
-      console.log('schema-check: subscribing with token', self.state.token);
+    socket.once('connect', function _onConnect() {
+      dMain('componentDidMount: connected');
+
+      dMain('componentDidMount: subscribing with token', self.state.token);
       socket.emit('subscribe', self.state.token);
 
       socket.on('reconnect', function _onReconnect() {
-        console.log('schema-check: resubscribing with token', self.state.token);
+        dMain('componentDidMount: resubscribing with token', self.state.token);
         socket.emit('subscribe', self.state.token);
-        console.log('schema-check: reconnected');
+        dMain('componentDidMount: reconnected');
       });
 
       socket.on('errored', function _onErrored(e) {
@@ -143,10 +148,10 @@ MainComponent = React.createClass({
     });
   },
   componentWillUnmount: function() {
-    console.log('schema-check: app unmounting');
-    console.log('schema-check: unsubscribing from backend');
+    dMain('componentWillUnmount: app unmounting');
+    dMain('componentWillUnmount: unsubscribing from backend');
     this.state.socket.emit('unsubscribe', this.state.token);
-    console.log('schema-check: app unmounted');
+    dMain('componentWillUnmount: app unmounted');
   },
   render: function() {
     dMain('render: Data %o',this.state);
@@ -199,7 +204,7 @@ SearchComponent = React.createClass({
   _onKeyUp: function(e) {
     if (27 === e.keyCode) {
       dSearch('_onKeyUp: ESC key pressed');
-     this.props.onESC();
+      this.props.onESC();
     }
   },
   componentDidMount: function() {
