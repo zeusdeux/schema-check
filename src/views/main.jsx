@@ -221,7 +221,7 @@ SearchComponent = React.createClass({
     return (
       <div className={classes}>
         <div className="search-box-container">
-          <h3>Check your schema moron</h3>
+          <h3>Check your schema</h3>
           <input className="u-full-width" type="text" placeholder="Enter url" id="search-box" valueLink={this.linkState('url')} onKeyPress = {this._onKeyPress} onKeyUp = {this._onKeyUp} ref="search-box"/>
           <button className="button-primary" id="search" onClick={this._onSearchClick}>Search</button>
         </div>
