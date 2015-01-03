@@ -1,6 +1,6 @@
 {
   "name": "schema-check",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Checks for schema.org schemas on a page and all the links on that page",
   "main": "index.js",
   "dependencies": {
