@@ -76,7 +76,7 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
 
   d('visitRecursively: updated state is %o', state);
 
-  request(inputUrl, function(err, res, body) {
+  request(inputUrl, function _requestHandler(err, res, body) {
     var $;
     var $schema;
     var data;
