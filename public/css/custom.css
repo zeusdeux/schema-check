@@ -114,6 +114,7 @@ ul {
   border-radius: 5px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 1px 1px 3px 0px #F0F0F0;
+  margin-bottom: 10px;
 }
 .results-list li > div > p.heading {
   margin-bottom: 0.5rem;
