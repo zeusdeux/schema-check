@@ -17,7 +17,8 @@
     "react": "^0.12.2",
     "request": "^2.51.0",
     "serve-favicon": "^2.2.0",
-    "socket.io": "^1.2.1"
+    "socket.io": "^1.2.1",
+    "socket.io-client": "^1.2.1"
   },
   "devDependencies": {
     "envify": "^3.2.0",

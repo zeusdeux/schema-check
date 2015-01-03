@@ -4,7 +4,7 @@ var http = require('http');
 var request = require('request');
 var cheerio = require('cheerio');
 var EE = require('events').EventEmitter;
-
+var d = require('debug')('visitor');
 
 util.inherits(Visitor, EE);
 
@@ -12,7 +12,7 @@ function Visitor() {
   var self = this;
 
   this.on('stop', function _stopSearchHandler() {
-    console.log('Stopping any more network requests');
+    d('_stopSearchHandler: Stopping any more network requests');
     self._stopped = true;
   });
 }
@@ -21,7 +21,11 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
   var self = this;
   var temp;
 
+  d('visitRecursively: raw input url is %s', inputUrl);
+  d('visitRecursively: state is %s', state);
+
   // emit error if inputUrl is falsy and return
+  d('visitRecursively: emitting error of type InputError');
   if (!inputUrl) {
     this.emit('errored', {
       error: new Error('Empty input url'),
@@ -38,6 +42,7 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
 
   // if there's no host then emit error and return
   if (!temp.host || !temp.protocol) {
+    d('visitRecursively: emitting error of type InputError');
     this.emit('errored', {
       error: new Error('Malformed input url. It has no host or protocol'),
       type: 'InputError',
@@ -54,25 +59,34 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
   // trim the last '/' from inputUrl cuz no keys in state have trailing '/'
   inputUrl = '/' === inputUrl[inputUrl.length - 1] ? inputUrl.slice(0, -1) : inputUrl;
 
+  d('visitRecursively: processed input url is %s', inputUrl);
+
   // if inputUrl has been visited then return
   if (state[inputUrl]) {
     console.log('Already visited %s', inputUrl);
     return;
   }
 
+  d('visitRecursively: has the search been stopped? %s', !!this._stopped);
   // if search has been stopped then just return blindly and dont hit the network
   if (this._stopped) return;
 
   // mark inputUrl as visited
   state[inputUrl] = true;
 
+  d('visitRecursively: updated state is %o', state);
+
   request(inputUrl, function(err, res, body) {
     var $;
     var $schema;
     var data;
 
+    // d('visitRecursively:request: res %o', res);
+    // d('visitRecursively:request: body %s', body);
+
     // if error, emit error and return
     if (err) {
+      d('visitRecursively:request: emitting error of type RequestError %o', err);
       self.emit('errored', {
         error: err,
         message: err.message,
@@ -86,7 +100,8 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
     // if status is anything other than a 200, emit httpError and return
     if (res.statusCode !== 200) {
       err = new Error(http.STATUS_CODES[res.statusCode]);
-      console.log(err);
+      d('visitRecursively:request: response status code is %s', res.statusCode);
+      d('visitRecursively:request: emitting error of type HttpError %o', err);
       self.emit('errored', {
         error: err,
         message: err.message,
@@ -106,6 +121,7 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
     $schema = $('[itemtype*="schema.org"]');
 
     if (!$schema.length) {
+      d('visitRecursively:request: emitting notFound');
       self.emit('notFound', {
         message: 'No schema found.',
         url: inputUrl
@@ -138,6 +154,7 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
         data[itemtype] = obj;
       });
 
+      d('visitRecursively:request: emitting data %o', {data: data, url: inputUrl});
       // emit data
       // if there were no itemprops for an itemtype then data[itemtype]
       // will be [] i.e., empty array
@@ -167,9 +184,8 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
         }
       }
       catch (e) {
-        console.log(e.message);
-        console.log('Faulty input was: %s', $(v).attr('href'));
-        console.log(e.stack);
+        d('visitRecursively:request: error during parsing $(\'a\') hrefs %o', err);
+        d('visitRecursively:request: Faulty input was %s', $(v).attr('href'));
       }
     });
 
