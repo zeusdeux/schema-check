@@ -27,3 +27,5 @@ clean:
 	@$(RM) $(BUILD)/*
 
 .PHONY: all clean
+
+# NODE_ENV=production PORT=8008 DEBUG=state,routes:*,visitor pm2 start -x ./bin/server --name "schema-check"
