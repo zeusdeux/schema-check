@@ -1,8 +1,8 @@
-var router = require('express').Router();
+var router  = require('express').Router();
 var Visitor = require('../visitor');
 //var React = require('react');
-var State = require('../state');
-var d = require('debug')('routes:index');
+var State   = require('../state');
+var d       = require('debug')('schema-check:routes:index');
 
 
 router.get('/', function _getRootPathCB(_, res) {
@@ -17,9 +17,9 @@ router.get('/', function _getRootPathCB(_, res) {
 
 router.get('/search', function _getSearchPathCB(req, res) {
   var visitor = new Visitor;
-  var url = req.param('url');
-  var token = req.param('token');
-  var socket = token ? State.getSocket(token) : void 0;
+  var url     = req.param('url');
+  var token   = req.param('token');
+  var socket  = token ? State.getSocket(token) : void 0;
 
   d('get:/search request url %s ', url);
   d('get:/search request token %s ', token);

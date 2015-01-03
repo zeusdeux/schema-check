@@ -1,5 +1,5 @@
 var state = {};
-var d = require('debug')('state');
+var d     = require('debug')('schema-check:state');
 
 function init(token) {
   state[token] = state[token] || {};
