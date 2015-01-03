@@ -17,7 +17,7 @@ function Visitor() {
   });
 }
 
-Visitor.prototype.visitRecursively = function(inputUrl, state) {
+Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) {
   var self = this;
   var temp;
 
@@ -137,7 +137,7 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
       data = {};
 
       // go over each found schema
-      $schema.each(function(i, v) {
+      $schema.each(function $schemaEachLoopCB(i, v) {
         var obj = {};
         var $itemprops = $(v).find('[itemprop]');
         var itemtype = $(v).attr('itemtype') || 'unknownItemtype' + i;
@@ -145,7 +145,7 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
         data[itemtype] = data[itemtype] || {};
 
         // go over each child of current schema
-        $itemprops.each(function(j, w) {
+        $itemprops.each(function $itempropsEachLoopCB(j, w) {
           // its of the form { <itemprop>: <value> }
           // example { name: "JW Heating & Air", streetAddress: "1135 Venice Blvd." }
           obj[$(w).attr('itemprop') || 'itemprop' + j] = $(w).text();
@@ -165,7 +165,7 @@ Visitor.prototype.visitRecursively = function(inputUrl, state) {
     }
 
     // get the links on this page and call Visitor.prototype.visitRecursively on em, recursively :3
-    $('a').each(function(i, v) {
+    $('a').each(function $aEachCB(i, v) {
       try {
         var temp = url.parse($(v).attr('href'));
         var nextInputUrl = '';

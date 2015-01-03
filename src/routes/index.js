@@ -5,7 +5,7 @@ var State = require('../state');
 var d = require('debug')('routes:index');
 
 
-router.get('/', function(_, res) {
+router.get('/', function _getRootPathCB(_, res) {
   var markup = '';
 
   d('get:/ rendering index');
@@ -15,7 +15,7 @@ router.get('/', function(_, res) {
   });
 });
 
-router.get('/search', function(req, res) {
+router.get('/search', function _getSearchPathCB(req, res) {
   var visitor = new Visitor;
   var url = req.param('url');
   var token = req.param('token');
@@ -59,7 +59,7 @@ router.get('/search', function(req, res) {
   else res.status(400).end('Invalid request');
 });
 
-router.post('/stopSearch', function(req, res) {
+router.post('/stopSearch', function _postStopSearchCB(req, res) {
   var token = req.param('token');
 
   d('post:/stopSearch got request to stop search');
@@ -77,4 +77,5 @@ router.post('/stopSearch', function(req, res) {
 
   res.status(200).end();
 });
+
 module.exports = router;

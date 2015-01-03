@@ -24,8 +24,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(cookieParser());
 
-console.log(path.resolve(__dirname, '../public'));
-
 app.use(express.static(path.resolve(__dirname, '../public')));
 
 app.use('/', routes);
@@ -40,7 +38,6 @@ if (app.get('env') === 'development') {
       error: err
     });
   });
-
 }
 
 // production error handler
