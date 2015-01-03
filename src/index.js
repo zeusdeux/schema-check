@@ -4,6 +4,7 @@ var path = require('path');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var compression = require('compression');
 
 var routes = require('./routes');
 var app = express();
@@ -14,6 +15,9 @@ app.set('view engine', 'ejs');
 
 //app.use(favicon());
 app.use(logger('dev'));
+app.use(compression({
+  threshold: 512
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(cookieParser());
