@@ -1,10 +1,10 @@
-var url = require('url');
-var util = require('util');
-var http = require('http');
+var url     = require('url');
+var util    = require('util');
+var http    = require('http');
 var request = require('request');
 var cheerio = require('cheerio');
-var EE = require('events').EventEmitter;
-var d = require('debug')('visitor');
+var EE      = require('events').EventEmitter;
+var d       = require('debug')('schema-check:visitor');
 
 util.inherits(Visitor, EE);
 
@@ -19,10 +19,10 @@ function Visitor() {
 
 Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) {
   var self = this;
-  var temp;
+  var parsedInputUrl;
 
   d('visitRecursively: raw input url is %s', inputUrl);
-  d('visitRecursively: state is %s', state);
+  // d('visitRecursively: state is %s', state);
 
   // emit error if inputUrl is falsy and return
   d('visitRecursively: emitting error of type InputError');
@@ -38,10 +38,10 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
   // if state is falsy, set it to empty object
   state = state || {};
 
-  temp = url.parse(inputUrl);
+  parsedInputUrl = url.parse(inputUrl);
 
   // if there's no host then emit error and return
-  if (!temp.host || !temp.protocol) {
+  if (!parsedInputUrl.host || !parsedInputUrl.protocol) {
     d('visitRecursively: emitting error of type InputError');
     this.emit('errored', {
       error: new Error('Malformed input url. It has no host or protocol'),
@@ -53,8 +53,8 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
 
   // store the initial url that visitor was called with
   // links found on this page are checked if they
-  state.origin = state.origin || temp.host;
-  state.protocol = state.protocol || temp.protocol;
+  state.origin = state.origin || parsedInputUrl.host;
+  state.protocol = state.protocol || parsedInputUrl.protocol;
 
   // trim the last '/' from inputUrl cuz no keys in state have trailing '/'
   inputUrl = '/' === inputUrl[inputUrl.length - 1] ? inputUrl.slice(0, -1) : inputUrl;
@@ -74,19 +74,20 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
   // mark inputUrl as visited
   state[inputUrl] = true;
 
-  d('visitRecursively: updated state is %o', state);
+  // d('visitRecursively: updated state is %o', state);
 
   request(inputUrl, function _requestHandler(err, res, body) {
     var $;
     var $schema;
     var data;
+    // var urlsWithoutHttpAndHttpsRegex = /^(-\.)?([^\s/?\.#-]+\.?)+(\/[^\s]*)?$/i;
 
-    // d('visitRecursively:request: res %o', res);
-    // d('visitRecursively:request: body %s', body);
+    // d('visitRecursively:request res %o', res);
+    // d('visitRecursively:request body %s', body);
 
     // if error, emit error and return
     if (err) {
-      d('visitRecursively:request: emitting error of type RequestError %o', err);
+      d('visitRecursively:request emitting error of type RequestError %o', err);
       self.emit('errored', {
         error: err,
         message: err.message,
@@ -100,8 +101,8 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
     // if status is anything other than a 200, emit httpError and return
     if (res.statusCode !== 200) {
       err = new Error(http.STATUS_CODES[res.statusCode]);
-      d('visitRecursively:request: response status code is %s', res.statusCode);
-      d('visitRecursively:request: emitting error of type HttpError %o', err);
+      d('visitRecursively:request response status code is %s', res.statusCode);
+      d('visitRecursively:request emitting error of type HttpError %o', err);
       self.emit('errored', {
         error: err,
         message: err.message,
@@ -120,8 +121,9 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
     // check if any schemas present
     $schema = $('[itemtype*="schema.org"]');
 
+    // no schemas? Emit notFound
     if (!$schema.length) {
-      d('visitRecursively:request: emitting notFound');
+      d('visitRecursively:request emitting notFound');
       self.emit('notFound', {
         message: 'No schema found.',
         url: inputUrl
@@ -131,16 +133,16 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
       /*
         structure
         {
-          <itemtype>: {.. <itemprop>: <value> ..}
+        <itemtype>: {.. <itemprop>: <value> ..}
         }
       */
       data = {};
 
       // go over each found schema
       $schema.each(function $schemaEachLoopCB(i, v) {
-        var obj = {};
+        var obj        = {};
         var $itemprops = $(v).find('[itemprop]');
-        var itemtype = $(v).attr('itemtype') || 'unknownItemtype' + i;
+        var itemtype   = $(v).attr('itemtype') || 'unknownItemtype' + i;
 
         data[itemtype] = data[itemtype] || {};
 
@@ -154,10 +156,13 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
         data[itemtype] = obj;
       });
 
-      d('visitRecursively:request: emitting data %o', {data: data, url: inputUrl});
       // emit data
       // if there were no itemprops for an itemtype then data[itemtype]
       // will be [] i.e., empty array
+      d('visitRecursively:request emitting data %o', {
+        data: data,
+        url: inputUrl
+      });
       self.emit('data', {
         data: data,
         url: inputUrl
@@ -167,10 +172,22 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
     // get the links on this page and call Visitor.prototype.visitRecursively on em, recursively :3
     $('a').each(function $aEachCB(i, v) {
       try {
-        var temp = url.parse($(v).attr('href'));
+        // var currentHref = $(v).attr('href');
+        var temp         = url.parse($(v).attr('href'));
         var nextInputUrl = '';
 
-        if (state.origin === temp.host || (temp.href && '/' === temp.href[0]) || (!temp.host && temp.href && !temp.hash)) {
+        // if the href is some url without http/https then url.parse doesn't parse it properly (it treats the whole thing as a relative path :\ )
+        // this is to remedy that
+        // if (urlsWithoutHttpAndHttpsRegex.test(currentHref)) currentHref = 'http://' + currentHref.trim();
+
+        // temp = url.parse(currentHref);
+
+        d('visitRecursively:request parsed input url is %o', parsedInputUrl);
+
+        if (state.origin === temp.host || (!temp.host && temp.href)) {
+          // resolve relative href (like ../contact or ./resume) against the current pathname we are at i.e., parsedInputUrl.pathname
+          temp.pathname = url.resolve(parsedInputUrl.pathname, temp.pathname);
+
           nextInputUrl = 'http' === temp.protocol || 'https' === temp.protocol ? temp.protocol : state.protocol;
           nextInputUrl += '//';
           nextInputUrl += temp.host || state.origin;
@@ -184,8 +201,8 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
         }
       }
       catch (e) {
-        d('visitRecursively:request: error during parsing $(\'a\') hrefs %o', err);
-        d('visitRecursively:request: Faulty input was %s', $(v).attr('href'));
+        d('visitRecursively:request error during parsing $(\'a\') hrefs %o', err);
+        d('visitRecursively:request Faulty input was %s', $(v).attr('href'));
       }
     });
 
