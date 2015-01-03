@@ -8,9 +8,10 @@ var d = require('debug')('routes:index');
 router.get('/', function(_, res) {
   var markup = '';
 
-  d('get:/: rendering index');
+  d('get:/ rendering index');
   res.render('index', {
-    markup: markup
+    markup: markup,
+    env: process.env.NODE_ENV
   });
 });
 
@@ -20,9 +21,9 @@ router.get('/search', function(req, res) {
   var token = req.param('token');
   var socket = token ? State.getSocket(token) : void 0;
 
-  d('get:/search: request url %s ', url);
-  d('get:/search: request token %s ', token);
-  d('get:/search: socket id %s', socket.id);
+  d('get:/search request url %s ', url);
+  d('get:/search request token %s ', token);
+  d('get:/search socket id %s', socket.id);
 
   // if there's already a visitor for this token (which means there might be a search happening)
   // and there's a new search request then stop the previous search
@@ -39,7 +40,7 @@ router.get('/search', function(req, res) {
     // start magic
     visitor.visitRecursively(url);
 
-    d('get:/search: setting up listeners on the new visitor for current request');
+    d('get:/search setting up listeners on the new visitor for current request');
     visitor.on('errored', function(o) {
       socket.emit('errored', o);
     });
@@ -61,8 +62,8 @@ router.get('/search', function(req, res) {
 router.post('/stopSearch', function(req, res) {
   var token = req.param('token');
 
-  d('post:/stopSearch: got request to stop search');
-  d('post:/stopSearch: token', token);
+  d('post:/stopSearch got request to stop search');
+  d('post:/stopSearch token', token);
 
   // stop current search if there is one going on
   // well this wont really "stop" the search but it will
