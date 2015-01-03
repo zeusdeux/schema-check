@@ -68,7 +68,7 @@ ul {
   position: relative;
 }
 .results-container.expand .cross {
-  position: absolute;
+  position: fixed;
   top: 0;
   font-size: 1.4em;
   right: 0;
