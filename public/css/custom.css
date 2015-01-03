@@ -148,6 +148,13 @@ ul {
 .right {
   float: right;
 }
+.ellipsis {
+  width: 65%;
+  display: inline-block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
 @media (max-width: 550px) {
   .search-container.shrunk {
     position: static;
