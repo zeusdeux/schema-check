@@ -82,12 +82,13 @@ ul {
   color: #fff;
   background: rgb(110, 110, 110);
   cursor: pointer;
+  z-index: 9999;
 }
 .results-container.expand .cross:hover {
-  background: rgb(90,90,90);
+  background: rgb(90, 90, 90);
 }
 .results-container.expand .cross:focus {
-  background: rgb(110,110,110);
+  background: rgb(110, 110, 110);
 }
 .results-container .cross {
   display: none;
