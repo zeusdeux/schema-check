@@ -36364,9 +36364,9 @@ var React   = require('react/addons');
 var uuid    = require('node-uuid').v4;
 var io      = require('socket.io-client');
 var debug   = require('debug');
-var dMain   = debug('main:MainComponent');
-var dRes    = debug('main:ResultsComponent');
-var dSearch = debug('main:SearchComponent');
+var dMain   = debug('schema-check:MainComponent');
+var dRes    = debug('schema-check:ResultsComponent');
+var dSearch = debug('schema-check:SearchComponent');
 var MainComponent;
 var SearchComponent;
 var LoaderComponent;
@@ -36635,7 +36635,7 @@ ResultsComponent = React.createClass({displayName: "ResultsComponent",
       if (obj.error){
         results.push (
           React.createElement("li", {className: liClasses, key: url}, 
-            React.createElement("p", {className: pClasses}, i, ". ", url, " ", React.createElement("span", {className: "right"}, "Error ", obj.code, ": ", obj.message))
+            React.createElement("p", {className: pClasses}, React.createElement("span", {className: "ellipsis"}, i, ". ", url), " ", React.createElement("span", {className: "right"}, "Error ", obj.code, ": ", obj.message))
           )
         );
       }
@@ -36643,7 +36643,7 @@ ResultsComponent = React.createClass({displayName: "ResultsComponent",
       else if (obj.notFound){
         results.push (
           React.createElement("li", {className: liClasses, key: url}, 
-            React.createElement("p", {className: pClasses}, i, ". ", url, " ", React.createElement("span", {className: "right"}, obj.message))
+            React.createElement("p", {className: pClasses}, React.createElement("span", {className: "ellipsis"}, i, ". ", url), " ", React.createElement("span", {className: "right"}, obj.message))
           )
         );
       }
