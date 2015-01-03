@@ -53,11 +53,21 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
 
   // store the initial url that visitor was called with
   // links found on this page are checked if they
-  state.origin = state.origin || parsedInputUrl.host;
+  state.origin = state.origin || parsedInputUrl.host.replace('www.', '');
+  state.originWithWWW = 'www.' + state.origin;
   state.protocol = state.protocol || parsedInputUrl.protocol;
 
   // trim the last '/' from inputUrl cuz no keys in state have trailing '/'
   inputUrl = '/' === inputUrl[inputUrl.length - 1] ? inputUrl.slice(0, -1) : inputUrl;
+
+  // trim whitespace
+  inputUrl = inputUrl.trim();
+
+  // todo: I should probably strip 'www.' from input url to prevent network call for both, say,
+  // http://www.x.com and http://x.com
+  // but then again, some people might have setup weird redirects for www. and non www.
+  // if i decided to enable this, the fix is below
+  // inputUrl = inputUrl.replace(/^(https?:\/\/)www\./g, '$1');
 
   d('visitRecursively: processed input url is %s', inputUrl);
 
@@ -140,9 +150,9 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
 
       // go over each found schema
       $schema.each(function $schemaEachLoopCB(i, v) {
-        var obj        = {};
+        var obj = {};
         var $itemprops = $(v).find('[itemprop]');
-        var itemtype   = $(v).attr('itemtype') || 'unknownItemtype' + i;
+        var itemtype = $(v).attr('itemtype') || 'unknownItemtype' + i;
 
         data[itemtype] = data[itemtype] || {};
 
@@ -173,7 +183,7 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
     $('a').each(function $aEachCB(i, v) {
       try {
         // var currentHref = $(v).attr('href');
-        var temp         = url.parse($(v).attr('href'));
+        var temp = url.parse($(v).attr('href'));
         var nextInputUrl = '';
 
         // if the href is some url without http/https then url.parse doesn't parse it properly (it treats the whole thing as a relative path :\ )
@@ -184,7 +194,7 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
 
         d('visitRecursively:request parsed input url is %o', parsedInputUrl);
 
-        if (state.origin === temp.host || (!temp.host && temp.href)) {
+        if (state.origin === temp.host || state.originWithWWW === temp.host || (!temp.host && temp.href)) {
           // resolve relative href (like ../contact or ./resume) against the current pathname we are at i.e., parsedInputUrl.pathname
           temp.pathname = url.resolve(parsedInputUrl.pathname, temp.pathname);
 
