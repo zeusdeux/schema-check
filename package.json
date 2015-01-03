@@ -23,6 +23,7 @@
     "socket.io-client": "^1.2.1"
   },
   "devDependencies": {
+    "clean-css": "^3.0.1",
     "envify": "^3.2.0",
     "mocha": "^2.1.0",
     "nodemon": "^1.2.1",

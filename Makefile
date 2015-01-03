@@ -4,12 +4,13 @@ BUILD		= ./build
 NM			= ./node_modules
 BIN			= $(NM)/.bin
 VIEWS		= $(SRC)/views
+PUBLIC  = ./public
 
 # files
 MAIN		= $(VIEWS)/main.jsx
 MAPFILE = bundle.min.map
 
-all: $(BUILD)/bundle.min.js
+all: $(BUILD)/bundle.min.js $(BUILD)/style.min.css
 
 $(BUILD)/bundle.min.js: $(BUILD)/bundle.js
 	@$(BIN)/uglifyjs $^	\
@@ -22,6 +23,9 @@ $(BUILD)/bundle.min.js: $(BUILD)/bundle.js
 
 $(BUILD)/bundle.js: $(VIEWS)/* $(NM)/*
 	@$(BIN)/browserify -t reactify -t envify $(MAIN) -o $@
+
+$(BUILD)/style.min.css: $(PUBLIC)/css/normalize.css $(PUBLIC)/css/skeleton.css $(PUBLIC)/css/custom.css
+	$(BIN)/cleancss $^ -o $@ -d
 
 clean:
 	@$(RM) $(BUILD)/*
