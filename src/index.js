@@ -9,6 +9,8 @@ var compression = require('compression');
 var routes = require('./routes');
 var app = express();
 
+require('heapdump');
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
