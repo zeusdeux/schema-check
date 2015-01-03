@@ -3,9 +3,9 @@ var React   = require('react/addons');
 var uuid    = require('node-uuid').v4;
 var io      = require('socket.io-client');
 var debug   = require('debug');
-var dMain   = debug('main:MainComponent');
-var dRes    = debug('main:ResultsComponent');
-var dSearch = debug('main:SearchComponent');
+var dMain   = debug('schema-check:MainComponent');
+var dRes    = debug('schema-check:ResultsComponent');
+var dSearch = debug('schema-check:SearchComponent');
 var MainComponent;
 var SearchComponent;
 var LoaderComponent;
@@ -274,7 +274,7 @@ ResultsComponent = React.createClass({
       if (obj.error){
         results.push (
           <li className={liClasses} key={url}>
-            <p className={pClasses}>{i}. {url} <span className="right">Error {obj.code}: {obj.message}</span></p>
+            <p className={pClasses}><span className="ellipsis">{i}. {url}</span> <span className="right">Error {obj.code}: {obj.message}</span></p>
           </li>
         );
       }
@@ -282,7 +282,7 @@ ResultsComponent = React.createClass({
       else if (obj.notFound){
         results.push (
           <li className={liClasses} key={url}>
-            <p className={pClasses}>{i}. {url} <span className="right">{obj.message}</span></p>
+            <p className={pClasses}><span className="ellipsis">{i}. {url}</span> <span className="right">{obj.message}</span></p>
           </li>
         );
       }
