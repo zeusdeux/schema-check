@@ -32,4 +32,4 @@ clean:
 
 .PHONY: all clean
 
-# git pull --rebase origin master && pm2 delete schema-check && NODE_ENV=production PORT=8008 DEBUG=state,routes:*,visitor pm2 start -x ./bin/server --name "schema-check"
+# git pull --rebase origin master && git reset --hard origin/master && pm2 delete schema-check && NODE_ENV=production PORT=8008 DEBUG=schema-check:* pm2 start -x ./bin/server --name "schema-check"
