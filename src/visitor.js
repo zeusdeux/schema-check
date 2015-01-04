@@ -42,7 +42,18 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
   // if state is falsy, set it to empty object
   state = state || {};
 
-  parsedInputUrl = url.parse(inputUrl);
+  try {
+    parsedInputUrl = url.parse(inputUrl);
+  }
+  catch (e){
+    dVisitRecur('emitting error of type InputError');
+    this.emit('errored', {
+      error: e,
+      type: 'InputError',
+      input: inputUrl
+    });
+    return;
+  }
 
   // if there's no host then emit error and return
   if (!parsedInputUrl.host || !parsedInputUrl.protocol) {
@@ -219,10 +230,11 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
           nextInputUrl += '/' === temp.pathname[0] ? temp.pathname : '/' + temp.pathname;
           nextInputUrl = '/' === nextInputUrl[nextInputUrl.length - 1] ? nextInputUrl.slice(0, -1) : nextInputUrl;
           nextInputUrl = nextInputUrl.replace(/^(https?:\/\/)www\./g, '$1');
+          nextInputUrl = nextInputUrl.trim();
 
           if (nextInputUrl && !state[nextInputUrl]) {
             self.emit('state', state);
-            self.visitRecursively(nextInputUrl, state);
+            process.nextTick(self.visitRecursively.bind(self, nextInputUrl, state));
             dReqVerbose('done calling visitRecursively with next input url %s', nextInputUrl);
           }
         }
