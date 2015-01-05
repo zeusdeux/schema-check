@@ -13,8 +13,22 @@ var ResultsComponent;
 
 
 MainComponent = React.createClass({
+  _stopSearch: function() {
+    var self = this;
+
+    dMain('_stopSearch: sending request to stop current search (if any) for this client');
+    $.ajax({
+      type: 'POST',
+      url: '/stopSearch',
+      data: {
+        token: self.state.token
+      }
+    });
+  },
   _onSearchClick: function(url) {
     var self = this;
+
+    this._stopSearch();
 
     dMain('_onSearchClick: making search request with url %s and token %s', url, this.state.token);
 
@@ -46,14 +60,7 @@ MainComponent = React.createClass({
   _onCloseResultsPane: function() {
     var self = this;
 
-    dMain('_onCloseResultsPane: sending request to stop current search (if any) for this client');
-    $.ajax({
-      type: 'POST',
-      url: '/stopSearch',
-      data: {
-        token: self.state.token
-      }
-    });
+    this._stopSearch();
 
     dMain('_onCloseResultsPane: hiding results pane and resetting results');
     this.setState({
