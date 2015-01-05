@@ -3,6 +3,8 @@ schema-check
 
 Checks for schema.org schemas on a page and recursively for all the links on that page.
 
+Demo it [here](http://colorfad.in:8008). Be gentle though, it isn't on a production ready box.
+
 ### Installation
 
 ```bash
