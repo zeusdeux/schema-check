@@ -174,7 +174,7 @@ SearchComponent = React.createClass({
         throw new Error('Required field is absent: '+fieldName);
       }
     },
-    urlRegex: /^(https?|ftp):\/\/(-\.)?([^\s/?\.#-]+\.?)+(\/[^\s]*)?$/i,
+    urlRegex: /^(https?|ftp):\/\/(-\.)?([^\s/?\.#]+\.?)+(\/[^\s]*)?$/i,
     validateUrl: function(val, fieldName) {
       if (!this.urlRegex.test(val)) {
         throw new Error('Invalid url');
