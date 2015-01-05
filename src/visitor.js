@@ -3,6 +3,7 @@ var util        = require('util');
 var http        = require('http');
 var request     = require('request');
 var cheerio     = require('cheerio');
+var utils       = require('./utils');
 var EE          = require('events').EventEmitter;
 var dStop       = require('debug')('schema-check:visitor:stopSearch');
 var dReq        = require('debug')('schema-check:visitor:makeRequest');
@@ -45,7 +46,7 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
   try {
     parsedInputUrl = url.parse(inputUrl);
   }
-  catch (e){
+  catch (e) {
     dVisitRecur('emitting error of type InputError');
     this.emit('errored', {
       error: e,
@@ -113,7 +114,8 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
   request(inputUrl, function _requestHandler(err, res, body) {
     var $;
     var data;
-    var $schema;
+    var $htmlSchema;
+    var $jsonSchema;
     // var urlsWithoutHttpAndHttpsRegex = /^(-\.)?([^\s/?\.#-]+\.?)+(\/[^\s]*)?$/i;
 
     // dReq('res %o', res);
@@ -155,10 +157,16 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
     $ = cheerio.load(body);
 
     // check if any schemas present
-    $schema = $('[itemtype*="schema.org"]');
+    $htmlSchema = $('[itemtype*="schema.org"]');
+
+    // get the schema that is added as json (for example., flipkart.com has schema embedded as json in a script tag)
+    $jsonSchema = $('script[type*="ld+json"]');
+
+    // dReqVerbose('html schema %o', $htmlSchema);
+    // dReqVerbose('json schema %o', $jsonSchema.text());
 
     // no schemas? Emit notFound
-    if (!$schema.length) {
+    if (!$htmlSchema.length && !$jsonSchema.length) {
       dReq('emitting notFound');
       self.emit('notFound', {
         message: 'No schema found.',
@@ -174,31 +182,54 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
       */
       data = {};
 
-      // go over each found schema
-      $schema.each(function $schemaEachLoopCB(i, v) {
-        var obj        = {};
-        var $itemprops = $(v).find('[itemprop]');
-        var itemtype   = $(v).attr('itemtype') || 'unknownItemtype' + i;
+      if ($htmlSchema.length) { // go over each found schema
+        $htmlSchema.each(function $htmlSchemaEachLoopCB(i, v) {
+          var obj        = {};
+          var $itemprops = $(v).find('[itemprop]');
+          var itemtype   = $(v).attr('itemtype') || 'unknownItemtype' + i;
 
-        data[itemtype] = data[itemtype] || {};
+          data[itemtype] = data[itemtype] || {};
 
-        // go over each child of current schema
-        $itemprops.each(function $itempropsEachLoopCB(j, w) {
-          // its of the form { <itemprop>: <value> }
-          // example { name: "JW Heating & Air", streetAddress: "1135 Venice Blvd." }
-          obj[$(w).attr('itemprop') || 'itemprop' + j] = $(w).text() || $(w).attr('src') || $(w).val();
+          // go over each child of current schema
+          $itemprops.each(function $itempropsEachLoopCB(j, w) {
+            // its of the form { <itemprop>: <value> }
+            // example { name: "JW Heating & Air", streetAddress: "1135 Venice Blvd." }
+            obj[$(w).attr('itemprop') || 'itemprop' + j] = $(w).text() || $(w).attr('src') || $(w).val();
+          });
+
+          // build data that will be emitted after all of this
+          data[itemtype] = obj;
         });
-        // build data that will be emitted after all of this
-        data[itemtype] = obj;
-      });
+      }
 
-      // emit data
-      // if there were no itemprops for an itemtype then data[itemtype]
-      // will be [] i.e., empty array
+
+      if ($jsonSchema.length) { // go over the json schema and add to data
+        $jsonSchema.each(function $jsonSchemaEachLoopCB(i, v) {
+          try {
+            var json = JSON.parse($(v).text());
+            var type = json['@type'] || json.type;
+
+            dReqVerbose('parsed json from json schema is %o', json);
+            data[type] = data[type] || {};
+
+            Object.keys(json).forEach(function(key) {
+              data[type][key] = utils.stringifyObject(json[key], ', ');
+            });
+          }
+          catch (e) {
+            dReqVerbose('error in jsonSchema each loop %o', e);
+          }
+
+        });
+      }
+
       dReq('emitting data %o', {
         data: data,
         url: inputUrl
       });
+      // emit data
+      // if there were no itemprops for an itemtype then data[itemtype]
+      // will be [] i.e., empty array
       self.emit('data', {
         data: data,
         url: inputUrl
