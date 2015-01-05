@@ -5,7 +5,7 @@ Checks for schema.org schemas on a page and recursively for all the links on tha
 
 ### Installation
 
-```git
+```bash
 git clone git@github.com:zeusdeux/schema-check.git
 
 cd schema-check
