@@ -20,4 +20,5 @@ io.on('connection', function(socket){
         State.removeVisitor(token);
     });
 });
+
 console.log('Process pid is %s',process.pid);
