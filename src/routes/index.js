@@ -27,11 +27,11 @@ router.get('/search', function _getSearchPathCB(req, res) {
 
   // if there's already a visitor for this token (which means there might be a search happening)
   // and there's a new search request then stop the previous search
-  if (State.getVisitor(token)) {
-    State.getVisitor(token).emit('stop');
-    State.getVisitor(token).removeAllListeners();
-    State.removeVisitor(token);
-  }
+  // if (State.getVisitor(token)) {
+  //   State.getVisitor(token).emit('stop');
+  //   State.getVisitor(token).removeAllListeners();
+  //   State.removeVisitor(token);
+  // }
 
   if (url && token && socket) {
     // set new visitor for token
@@ -60,7 +60,8 @@ router.get('/search', function _getSearchPathCB(req, res) {
 });
 
 router.post('/stopSearch', function _postStopSearchCB(req, res) {
-  var token = req.param('token');
+  var token   = req.param('token');
+  var visitor = State.getVisitor(token);
 
   d('post:/stopSearch got request to stop search');
   d('post:/stopSearch token', token);
@@ -70,8 +71,8 @@ router.post('/stopSearch', function _postStopSearchCB(req, res) {
   // prevent any more network requests from going out
   // for whatever search was running
   if (State.getVisitor(token)) {
-    State.getVisitor(token).emit('stop');
-    State.getVisitor(token).removeAllListeners();
+    visitor.emit('stop');
+    visitor.removeAllListeners();
     State.removeVisitor(token);
   }
 
