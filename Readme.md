@@ -18,3 +18,5 @@ bower install
 
 node bin/server
 ```
+
+You probably want to use something like [pm2](https://github.com/Unitech/pm2) or [monit](http://mmonit.com/monit/) to keep the process up though.
