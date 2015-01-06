@@ -89,7 +89,7 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
 
   // if inputUrl has been visited then return
   if (state[inputUrl]) {
-    console.log('Already visited %s', inputUrl);
+    dVisitRecur('already visited %s', inputUrl);
     return;
   }
 
@@ -126,13 +126,13 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
     // if error, emit error and return
     if (err) {
       dReq('emitting error of type RequestError %o', err);
-      self.emit('errored', {
+      process.nextTick(self.emit.bind(self, 'errored', {
         error: err,
         message: err.message,
         type: 'RequestError',
         code: 500,
         input: inputUrl
-      });
+      }));
       return;
     }
 
@@ -141,13 +141,13 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
       err = new Error(http.STATUS_CODES[res.statusCode]);
       dReq('response status code is %s', res.statusCode);
       dReq('emitting error of type HttpError %o', err);
-      self.emit('errored', {
+      process.nextTick(self.emit.bind(self, 'errored', {
         error: err,
         message: err.message,
         type: 'HttpError',
         input: inputUrl,
         code: res.statusCode
-      });
+      }));
       return;
     }
 
@@ -168,10 +168,10 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
     // no schemas? Emit notFound
     if (!$htmlSchema.length && !$jsonSchema.length) {
       dReq('emitting notFound');
-      self.emit('notFound', {
+      process.nextTick(self.emit.bind(self, 'notFound', {
         message: 'No schema found.',
         url: inputUrl
-      });
+      }));
     }
     else {
       /*
@@ -230,10 +230,10 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
       // emit data
       // if there were no itemprops for an itemtype then data[itemtype]
       // will be [] i.e., empty array
-      self.emit('data', {
+      process.nextTick(self.emit.bind(self, 'data', {
         data: data,
         url: inputUrl
-      });
+      }));
     }
 
     // get the links on this page and call Visitor.prototype.visitRecursively on em, recursively :3
@@ -264,7 +264,7 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
           nextInputUrl = nextInputUrl.trim();
 
           if (nextInputUrl && !state[nextInputUrl]) {
-            self.emit('state', state);
+            process.nextTick(self.emit.bind(self, 'state', state));
             process.nextTick(self.visitRecursively.bind(self, nextInputUrl, state));
             dReqVerbose('done calling visitRecursively with next input url %s', nextInputUrl);
           }
