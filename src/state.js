@@ -3,7 +3,7 @@ var d     = require('debug')('schema-check:state');
 
 function init(token) {
   state[token] = state[token] || {};
-  d('init: state[token] %o', state[token]);
+  d('init: state[%s] %o', token, state[token]);
 }
 
 exports.getSocket = function getSocket(token) {
