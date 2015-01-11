@@ -111,15 +111,31 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
 };
 
 function makeRequest(self, inputUrl, parsedInputUrl, state) {
+  if (self._stopped) {
+    dReqVerbose('Search stopped, returning without any further recursive crawling from url %s', inputUrl);
+    return;
+  }
   request(inputUrl, function _requestHandler(err, res, body) {
     var $;
     var data;
     var $htmlSchema;
     var $jsonSchema;
-    // var urlsWithoutHttpAndHttpsRegex = /^(-\.)?([^\s/?\.#-]+\.?)+(\/[^\s]*)?$/i;
 
     // dReq('res %o', res);
     // dReq('body %s', body);
+    if (!utils.isSupportedMimeType(res.headers['content-type'].trim())) {
+      dReq('unsupported mime type found');
+      dReq('emitting error of type MimeTypeMismatchError %o', err);
+      err = new Error('Unsupported mime type');
+      self.emit('errored', {
+        error: err,
+        message: err.message,
+        type: 'MimeTypeMismatchError',
+        code: 500,
+        input: inputUrl
+      });
+      return;
+    }
 
     dReqVerbose('parsed input url is %o', parsedInputUrl);
 
@@ -236,6 +252,7 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
       });
     }
 
+    dReq('No of links found for url %s is %d', $('a').length);
     // get the links on this page and call Visitor.prototype.visitRecursively on em, recursively :3
     $('a').each(function $aEachCB(i, v) {
       try {
@@ -246,7 +263,7 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
 
           dReqVerbose('untouched temp.pathname is %s', temp.pathname);
 
-          if (temp.pathname && ('/' !== temp.pathname[0] && '.' !== temp.pathname[0])) temp.pathname = '/' + temp.pathname;
+          if (temp.pathname && '/' !== temp.pathname[0] && '.' !== temp.pathname[0]) temp.pathname = '/' + temp.pathname;
 
           dReqVerbose('resolving %s and %s', parsedInputUrl.pathname, temp.pathname);
 
@@ -263,6 +280,7 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
           nextInputUrl = nextInputUrl.replace(/^(https?:\/\/)www\./g, '$1');
           nextInputUrl = nextInputUrl.trim();
 
+          dReqVerbose('next input url is %s', nextInputUrl);
           if (nextInputUrl && !state[nextInputUrl]) {
             self.emit('state', state);
             process.nextTick(self.visitRecursively.bind(self, nextInputUrl, state));
