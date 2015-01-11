@@ -89,7 +89,7 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
 
   // if inputUrl has been visited then return
   if (state[inputUrl]) {
-    console.log('Already visited %s', inputUrl);
+    dVisitRecur('already visited %s', inputUrl);
     return;
   }
 

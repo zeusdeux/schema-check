@@ -26,6 +26,7 @@ var utils = {
         return p;
       }, Array.isArray(arg) ? [] : {});
     }
+    else return arg;
   },
   isObject: function isObject(arg) {
     return typeof arg === 'object' && arg !== null;
@@ -67,19 +68,18 @@ var utils = {
     });
     return '(' + temp.trim().slice(0, -1) + ')';
   },
+  supportedMimeTypes: [
+    /text\/html/,
+    /text\/xml/,
+    /text\/plain/,
+    /text\/css/,
+    /application\/xml/,
+    /application\/json/,
+    /application\/javascript/
+  ],
   isSupportedMimeType: function(mimeType) {
-    var supportedMimeTypes = [
-      'text/html',
-      'text/xml',
-      'text/plain',
-      'text/css',
-      'application/xml',
-      'application/json',
-      'application/javascript'
-    ];
-
-    return !!supportedMimeTypes.filter(function(v){
-      return v === mimeType;
+    return !!utils.supportedMimeTypes.filter(function(v) {
+      return v.test(mimeType);
     }).length;
   }
 };
