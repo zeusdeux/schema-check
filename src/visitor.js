@@ -252,7 +252,7 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
       });
     }
 
-    dReq('No of links found for url %s is %d', $('a').length);
+    dReq('No of links found for url %s is %d', inputUrl, $('a').length);
     // get the links on this page and call Visitor.prototype.visitRecursively on em, recursively :3
     $('a').each(function $aEachCB(i, v) {
       try {
