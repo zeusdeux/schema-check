@@ -67,83 +67,20 @@ var utils = {
     });
     return '(' + temp.trim().slice(0, -1) + ')';
   },
-  log: {
-    enable: {
-      warn: true,
-      error: true,
-      info: true,
-      verbose: true
-    },
-    style: {
-      error: 'color: #F41111',
-      info: 'color: #119E4A',
-      normalText: 'color: #000',
-      warn: 'color: #F4C611',
-      verbose: 'color: #A911F4'
-    },
-    warn: function() {
-      var msg = '';
-      var style = utils.log.style;
-      var args = [].slice.call(arguments, 0);
+  isSupportedMimeType: function(mimeType) {
+    var supportedMimeTypes = [
+      'text/html',
+      'text/xml',
+      'text/plain',
+      'text/css',
+      'application/xml',
+      'application/json',
+      'application/javascript'
+    ];
 
-      if (!utils.log.enable.warn) return;
-      if ('string' === typeof args[0]) msg = args.shift();
-      if (args.length) {
-        msg = msg + '\n';
-        console.warn('%cwarn: %c%s%s', style.warn, style.normalText, msg, utils.stringifyArray(args, ', '));
-      }
-      else {
-        console.warn('%cwarn: %c%s', style.warn, style.normalText, msg);
-      }
-    },
-    error: function() {
-      var msg = '';
-      var style = utils.log.style;
-      var args = [].slice.call(arguments, 0);
-
-      if (!utils.log.enable.error) return;
-      if ('string' === typeof args[0]) msg = args.shift();
-      if (args.length) {
-        msg = msg + '\n';
-        console.error('%cerror: %c%s%s', style.error, style.normalText, msg, utils.stringifyArray(args, ', '));
-        console.log.apply(console, args);
-      }
-      else {
-        console.error('%cerror: %c%s', style.error, style.normalText, msg);
-      }
-    },
-    info: function() {
-      var msg = '';
-      var style = utils.log.style;
-      var args = [].slice.call(arguments, 0);
-
-      if (!utils.log.enable.info) return;
-      if ('string' === typeof args[0]) msg = args.shift();
-      if (args.length) {
-        msg = msg + '\n';
-        console.log('%cinfo: %c%s%s', style.info, style.normalText, msg, utils.stringifyArray(args, ', '));
-        console.log.apply(console, args);
-      }
-      else {
-        console.log('%cinfo: %c%s', style.info, style.normalText, msg);
-      }
-    },
-    verbose: function() {
-      var msg = '';
-      var style = utils.log.style;
-      var args = [].slice.call(arguments, 0);
-
-      if ('string' === typeof args[0]) msg = args.shift();
-      if (!utils.log.enable.verbose) return;
-      if (args.length) {
-        msg = msg + '\n';
-        console.log('%cverbose: %c%s%s', style.verbose, style.normalText, msg, utils.stringifyArray(args, ', '));
-        console.log.apply(console, args);
-      }
-      else {
-        console.log('%cverbose: %c%s', style.verbose, style.normalText, msg);
-      }
-    }
+    return !!supportedMimeTypes.filter(function(v){
+      return v === mimeType;
+    }).length;
   }
 };
 
