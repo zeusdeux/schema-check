@@ -106,7 +106,7 @@ MainComponent = React.createClass({
       socket.on('errored', function _onErrored(e) {
         var results = self.state.results;
 
-        if ('HttpError' === e.type || 'RequestError' === e.type){
+        if ('HttpError' === e.type || 'RequestError' === e.type || 'MimeTypeMismatchError' === e.type){
           dMain('_onErrored: error received', e);
 
           results[e.input] = results[e.input] || {};
