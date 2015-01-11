@@ -36162,8 +36162,22 @@ var ResultsComponent;
 
 
 MainComponent = React.createClass({displayName: "MainComponent",
+  _stopSearch: function() {
+    var self = this;
+
+    dMain('_stopSearch: sending request to stop current search (if any) for this client');
+    $.ajax({
+      type: 'POST',
+      url: '/stopSearch',
+      data: {
+        token: self.state.token
+      }
+    });
+  },
   _onSearchClick: function(url) {
     var self = this;
+
+    this._stopSearch();
 
     dMain('_onSearchClick: making search request with url %s and token %s', url, this.state.token);
 
@@ -36195,14 +36209,7 @@ MainComponent = React.createClass({displayName: "MainComponent",
   _onCloseResultsPane: function() {
     var self = this;
 
-    dMain('_onCloseResultsPane: sending request to stop current search (if any) for this client');
-    $.ajax({
-      type: 'POST',
-      url: '/stopSearch',
-      data: {
-        token: self.state.token
-      }
-    });
+    this._stopSearch();
 
     dMain('_onCloseResultsPane: hiding results pane and resetting results');
     this.setState({
@@ -36248,7 +36255,7 @@ MainComponent = React.createClass({displayName: "MainComponent",
       socket.on('errored', function _onErrored(e) {
         var results = self.state.results;
 
-        if ('HttpError' === e.type || 'RequestError' === e.type){
+        if ('HttpError' === e.type || 'RequestError' === e.type || 'MimeTypeMismatchError' === e.type){
           dMain('_onErrored: error received', e);
 
           results[e.input] = results[e.input] || {};
