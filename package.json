@@ -1,6 +1,6 @@
 {
   "name": "schema-check",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Checks for schema.org schemas on a page and all the links on that page",
   "main": "index.js",
   "dependencies": {
@@ -37,9 +37,11 @@
   "keywords": [
     "schema.org",
     "schema",
-    "synup",
     "seo",
-    "seochecklist"
+    "search engine optimization",
+    "microdata",
+    "tool",
+    "online marketing"
   ],
   "author": "Mudit Ameta",
   "license": "MIT",
