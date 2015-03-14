@@ -11,6 +11,7 @@ var app          = express();
 
 require('heapdump');
 
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -21,7 +22,7 @@ app.use(compression({
   threshold: 512
 }));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.use(express.static(path.resolve(__dirname, '../public')));

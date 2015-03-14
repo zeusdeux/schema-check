@@ -123,19 +123,7 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
 
     // dReq('res %o', res);
     // dReq('body %s', body);
-    if (!utils.isSupportedMimeType(res.headers['content-type'].trim())) {
-      dReq('unsupported mime type found');
-      dReq('emitting error of type MimeTypeMismatchError %o', err);
-      err = new Error('Unsupported mime type');
-      self.emit('errored', {
-        error: err,
-        message: err.message,
-        type: 'MimeTypeMismatchError',
-        code: 500,
-        input: inputUrl
-      });
-      return;
-    }
+    // dReq('err %o', err);
 
     dReqVerbose('parsed input url is %o', parsedInputUrl);
 
@@ -146,6 +134,21 @@ function makeRequest(self, inputUrl, parsedInputUrl, state) {
         error: err,
         message: err.message,
         type: 'RequestError',
+        code: 500,
+        input: inputUrl
+      });
+      return;
+    }
+
+    // if mimetype isn't supported, throw
+    if (!utils.isSupportedMimeType(res.headers['content-type'].trim())) {
+      dReq('unsupported mime type found');
+      dReq('emitting error of type MimeTypeMismatchError %o', err);
+      err = new Error('Unsupported mime type');
+      self.emit('errored', {
+        error: err,
+        message: err.message,
+        type: 'MimeTypeMismatchError',
         code: 500,
         input: inputUrl
       });
