@@ -1,6 +1,5 @@
 var router  = require('express').Router();
 var Visitor = require('../visitor');
-//var React = require('react');
 var State   = require('../state');
 var d       = require('debug')('schema-check:routes:index');
 

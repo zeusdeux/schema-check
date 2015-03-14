@@ -29,6 +29,10 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
   dVisitRecur('starting with (raw) input url %s', inputUrl);
   // dVisitRecur('state is %s', state);
 
+  dVisitRecur('has the search been stopped? %s', !!this._stopped);
+  // if search has been stopped then just return blindly and dont hit the network
+  if (this._stopped) return;
+
   // emit error if inputUrl is falsy and return
   if (!inputUrl) {
     dVisitRecur('emitting error of type InputError');
@@ -92,10 +96,6 @@ Visitor.prototype.visitRecursively = function visitRecursively(inputUrl, state) 
     dVisitRecur('already visited %s', inputUrl);
     return;
   }
-
-  dVisitRecur('has the search been stopped? %s', !!this._stopped);
-  // if search has been stopped then just return blindly and dont hit the network
-  if (this._stopped) return;
 
   // mark inputUrl as visited
   state[inputUrl] = true;
