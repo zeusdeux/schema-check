@@ -17,7 +17,7 @@ MainComponent = React.createClass({
     var self = this;
 
     dMain('_stopSearch: sending request to stop current search (if any) for this client');
-    $.ajax({
+    return $.ajax({
       type: 'POST',
       url: '/stopSearch',
       data: {
@@ -28,27 +28,36 @@ MainComponent = React.createClass({
   _onSearchClick: function(url) {
     var self = this;
 
-    this._stopSearch();
+    // stop previous search and then make new search
+    // earlier the code was parallel and caused a race condition
+    // where the stop search would reach the server after a successful req
+    // for a new search and hence would stop the new search
+    // and would leave an old search running.
+    // Basically, in parallel, it wasnt sure which req would reach the server
+    // first due to network latency being unpredictable for requests
+    // Now the requests are sequential and should work as expected
+    this._stopSearch()
+        .done(function(){
+          dMain('_onSearchClick: making search request with url %s and token %s', url, self.state.token);
 
-    dMain('_onSearchClick: making search request with url %s and token %s', url, this.state.token);
-
-    //make ajax request with this.props.token, url
-    $.ajax({
-      type: 'GET',
-      url: '/search',
-      data: {
-        url: url,
-        token: this.state.token
-      }
-    }).fail(function(){
-      dMain('_onSearchClick: search failed. hiding side pane and showing alert');
-      // hide side pane
-      self.setState({
-        results: [],
-        searchActive: false
-      });
-      alert('Search request failed. Please try again.');
-    });
+          //make ajax request with this.props.token, url
+          $.ajax({
+            type: 'GET',
+            url: '/search',
+            data: {
+              url: url,
+              token: self.state.token
+            }
+          }).fail(function(){
+            dMain('_onSearchClick: search failed. hiding side pane and showing alert');
+            // hide side pane
+            self.setState({
+              results: [],
+              searchActive: false
+            });
+            alert('Search request failed. Please try again.');
+          });
+        });
 
     dMain('_onSearchClick: showing results pane');
     // show results pane
