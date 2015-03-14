@@ -149,7 +149,7 @@ ul {
   float: right;
 }
 .ellipsis {
-  width: 65%;
+  width: 57%;
   display: inline-block;
   white-space: nowrap;
   text-overflow: ellipsis;
