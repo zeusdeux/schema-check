@@ -47,5 +47,13 @@
   "license": "MIT",
   "directories": {
     "test": "test"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zeusdeux/schema-check.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zeusdeux/schema-check/issues"
+  },
+  "homepage": "https://github.com/zeusdeux/schema-check#readme"
 }
